@@ -111,6 +111,15 @@ LRESULT CALLBACK HexView::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (self) self->onLButtonDown(LOWORD(lParam), HIWORD(lParam));
         return 0;
 
+    case WM_MOUSEMOVE:
+        if (self) self->onMouseMove(LOWORD(lParam), HIWORD(lParam), wParam);
+        return 0;
+
+    case WM_LBUTTONUP:
+        if (self) self->m_selecting = false;
+        ReleaseCapture();
+        return 0;
+
     case WM_SIZE:
         if (self) self->updateScrollbar();
         return 0;
@@ -144,6 +153,47 @@ int HexView::getHexColumnWidth() const
 int HexView::getAsciiColumnX() const
 {
     return getOffsetColumnWidth() + getHexColumnWidth();
+}
+
+void HexView::copySelection()
+{
+    if (!m_engine || !m_engine->getBuffer())
+        return;
+
+    HexSelection sel = m_engine->getSelection();
+    if (sel.start >= sel.end)
+        return;
+
+    MemBuffer* buf = m_engine->getBuffer();
+    size_t count = sel.end - sel.start;
+
+    std::string hex;
+    hex.reserve(count * 3);
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        if (i > 0)
+            hex += ' ';
+        uint8_t b = buf->readByte(sel.start + i);
+        char tmp[4];
+        snprintf(tmp, sizeof(tmp), "%02X", b);
+        hex += tmp;
+    }
+
+    if (!OpenClipboard(m_hWnd))
+        return;
+
+    EmptyClipboard();
+
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, hex.size() + 1);
+    if (hMem) {
+        char* dest = (char*)GlobalLock(hMem);
+        memcpy(dest, hex.c_str(), hex.size() + 1);
+        GlobalUnlock(hMem);
+        SetClipboardData(CF_TEXT, hMem);
+    }
+
+    CloseClipboard();
 }
 
 void HexView::onPaint(HDC hdc)
@@ -355,6 +405,10 @@ void HexView::onKeyDown(WPARAM vk)
         if (GetKeyState(VK_CONTROL) & 0x8000)
             m_engine->undo();
         break;
+    case 'C':
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+            copySelection();
+        break;
     case 'Y':
         if (GetKeyState(VK_CONTROL) & 0x8000)
             m_engine->redo();
@@ -397,8 +451,29 @@ void HexView::onLButtonDown(int x, int y)
     size_t offset = hitTest(x, y);
     if (offset != SIZE_MAX && m_engine) {
         m_engine->setCursor(offset);
+        m_engine->setSelection(offset, offset);
+        m_selecting = true;
+        SetCapture(m_hWnd);
         InvalidateRect(m_hWnd, nullptr, FALSE);
     }
+}
+
+void HexView::onMouseMove(int x, int y, WPARAM keys)
+{
+    if (!m_selecting || !m_engine || !(keys & MK_LBUTTON))
+        return;
+
+    size_t offset = hitTest(x, y);
+    if (offset == SIZE_MAX)
+        return;
+
+    size_t start = m_engine->getCursor();
+    if (offset >= start)
+        m_engine->setSelection(start, offset + 1);
+    else
+        m_engine->setSelection(offset, start + 1);
+
+    InvalidateRect(m_hWnd, nullptr, FALSE);
 }
 
 size_t HexView::hitTest(int x, int y) const
