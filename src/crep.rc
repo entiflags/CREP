@@ -1,0 +1,6 @@
+// C.R.E.P Resources
+
+#include "resource.h"
+#include <windows.h>
+
+IDI_CREP ICON "res\\crep.ico"
