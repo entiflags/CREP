@@ -18,12 +18,30 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="src\main_window.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pe_view.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file_manager.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\crep.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="src\resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\main_window.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pe_view.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\file_manager.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
