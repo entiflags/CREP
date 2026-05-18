@@ -6,8 +6,6 @@
 #include <new>
 #include <algorithm>
 
-// --- Factory methods ---
-
 std::unique_ptr<MemBuffer> MemBuffer::fromFile(const std::wstring& path)
 {
     HANDLE hFile = CreateFileW(
@@ -38,7 +36,6 @@ std::unique_ptr<MemBuffer> MemBuffer::fromFile(const std::wstring& path)
         return nullptr;
     }
 
-    // Read in chunks for large files (ReadFile takes DWORD = max ~4GB)
     size_t totalToRead = buffer->m_data.size();
     size_t totalRead = 0;
     uint8_t* dest = buffer->m_data.data();
@@ -76,8 +73,6 @@ std::unique_ptr<MemBuffer> MemBuffer::fromData(const uint8_t* data, size_t size)
 
     return buffer;
 }
-
-// --- Read operations ---
 
 uint8_t MemBuffer::readByte(size_t offset) const
 {
@@ -125,7 +120,6 @@ bool MemBuffer::readBytes(size_t offset, uint8_t* out, size_t count) const
 {
     if (!out || count == 0)
         return false;
-
     if (offset >= m_data.size())
         return false;
     if (count > m_data.size() - offset)
@@ -134,8 +128,6 @@ bool MemBuffer::readBytes(size_t offset, uint8_t* out, size_t count) const
     memcpy(out, m_data.data() + offset, count);
     return true;
 }
-
-// --- Write operations ---
 
 bool MemBuffer::writeByte(size_t offset, uint8_t value)
 {
@@ -149,7 +141,6 @@ bool MemBuffer::writeBytes(size_t offset, const uint8_t* data, size_t count)
 {
     if (!data || count == 0)
         return false;
-
     if (offset >= m_data.size())
         return false;
     if (count > m_data.size() - offset)
@@ -158,8 +149,6 @@ bool MemBuffer::writeBytes(size_t offset, const uint8_t* data, size_t count)
     memcpy(m_data.data() + offset, data, count);
     return true;
 }
-
-// --- Info ---
 
 size_t MemBuffer::size() const
 {

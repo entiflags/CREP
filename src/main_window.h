@@ -4,16 +4,16 @@
 #include <windows.h>
 
 #include "file_manager.h"
+#include "hex_engine.h"
+#include "hex_view.h"
 #include "pe_view.h"
 
-// Main application window
 class MainWindow {
 public:
     bool create(HINSTANCE hInstance, int nCmdShow);
     HWND getHwnd() const { return m_hWnd; }
     HACCEL getAccel() const { return m_hAccel; }
 
-    // Access to subsystems
     FileManager& getFileManager() { return m_fileManager; }
 
 private:
@@ -30,6 +30,7 @@ private:
 
     void createMenuBar();
     void updateTitle();
+    void layoutPanels(int cx, int cy);
 
     HWND        m_hWnd = nullptr;
     HINSTANCE   m_hInstance = nullptr;
@@ -37,8 +38,15 @@ private:
     HACCEL      m_hAccel = nullptr;
 
     // Child panels
+    HexView     m_hexView;
     PEView      m_peView;
+
+    // Core engine
+    HexEngine   m_hexEngine;
 
     // Application logic
     FileManager m_fileManager;
+
+    // Layout: split ratio (hex view gets this fraction of width)
+    float m_splitRatio = 0.6f;
 };

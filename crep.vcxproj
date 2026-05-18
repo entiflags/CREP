@@ -140,6 +140,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\crep.h" />
+    <ClInclude Include="src\hex_engine.h" />
+    <ClInclude Include="src\hex_view.h" />
     <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\mem_buffer.h" />
     <ClInclude Include="src\pe_parser.h" />
@@ -148,6 +150,8 @@
     <ClInclude Include="src\pe_view.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\hex_engine.cpp" />
+    <ClCompile Include="src\hex_view.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\main_window.cpp" />
     <ClCompile Include="src\pe_view.cpp" />

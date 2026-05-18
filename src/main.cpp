@@ -1,5 +1,3 @@
-// Entry point
-
 #include "crep.h"
 #include "main_window.h"
 

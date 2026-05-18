@@ -9,9 +9,14 @@
 static const wchar_t* WINDOW_CLASS = L"CREP_MainWindow";
 static const wchar_t* WINDOW_TITLE = L"C.R.E.P - Cool Reverse Engineering Program";
 
+// --- Public ---
+
 bool MainWindow::create(HINSTANCE hInstance, int nCmdShow)
 {
     m_hInstance = hInstance;
+
+    // Register HexView custom control class
+    HexView::registerClass(hInstance);
 
     WNDCLASSEXW wcex = {};
     wcex.cbSize = sizeof(WNDCLASSEXW);
@@ -37,7 +42,6 @@ bool MainWindow::create(HINSTANCE hInstance, int nCmdShow)
     if (!m_hWnd)
         return false;
 
-    // Store 'this' pointer for WndProc
     SetWindowLongPtrW(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
 
     onCreate(m_hWnd);
@@ -46,6 +50,8 @@ bool MainWindow::create(HINSTANCE hInstance, int nCmdShow)
     UpdateWindow(m_hWnd);
     return true;
 }
+
+// --- WndProc ---
 
 LRESULT CALLBACK MainWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -73,13 +79,20 @@ LRESULT CALLBACK MainWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
+// --- Private handlers ---
+
 void MainWindow::onCreate(HWND hWnd)
 {
     createMenuBar();
 
     RECT rc;
     GetClientRect(hWnd, &rc);
-    m_peView.create(hWnd, m_hInstance, 0, 0, rc.right, rc.bottom);
+
+    int hexW = (int)(rc.right * m_splitRatio);
+    int peW = rc.right - hexW;
+
+    m_hexView.create(hWnd, m_hInstance, 0, 0, hexW, rc.bottom);
+    m_peView.create(hWnd, m_hInstance, hexW, 0, peW, rc.bottom);
 }
 
 void MainWindow::onCommand(WORD id)
@@ -95,7 +108,24 @@ void MainWindow::onCommand(WORD id)
 
 void MainWindow::onResize(int cx, int cy)
 {
-    m_peView.resize(0, 0, cx, cy);
+    layoutPanels(cx, cy);
+}
+
+void MainWindow::layoutPanels(int cx, int cy)
+{
+    if (!m_hexView.getHwnd() || !m_peView.getHwnd())
+        return;
+
+    int hexW = (int)(cx * m_splitRatio);
+    if (hexW < 100) hexW = 100;
+    int peW = cx - hexW;
+    if (peW < 100) {
+        peW = 100;
+        hexW = cx - peW;
+    }
+
+    m_hexView.resize(0, 0, hexW, cy);
+    m_peView.resize(hexW, 0, peW, cy);
 }
 
 void MainWindow::onClose()
@@ -111,7 +141,7 @@ void MainWindow::onClose()
             return;
         if (result == IDYES) {
             if (!m_fileManager.saveFile(ctx))
-                return; // save failed, don't close
+                return;
         }
     }
     DestroyWindow(m_hWnd);
@@ -141,12 +171,16 @@ void MainWindow::doFileOpen()
 
     updateTitle();
 
+    // Set up hex view
+    m_hexEngine.setBuffer(ctx->buffer.get());
+    m_hexView.setEngine(&m_hexEngine);
+
+    // Set up PE view
     if (ctx->isPE) {
         m_peView.setPEInfo(ctx->peInfo, ctx->buffer.get());
     }
     else {
         m_peView.clear();
-        // TODO: show hex view for non-PE files
     }
 }
 
@@ -205,7 +239,6 @@ void MainWindow::createMenuBar()
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hFileMenu, L"&File");
     SetMenu(m_hWnd, m_hMenu);
 
-    // Accelerator table
     ACCEL accels[] = {
         { FCONTROL | FVIRTKEY, 'O', IDM_FILE_OPEN },
         { FCONTROL | FVIRTKEY, 'S', IDM_FILE_SAVE },

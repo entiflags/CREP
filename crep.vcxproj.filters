@@ -27,6 +27,18 @@
     <ClCompile Include="src\file_manager.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="src\mem_buffer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pe_parser.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hex_engine.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hex_view.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\crep.h">
@@ -42,6 +54,18 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="src\file_manager.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mem_buffer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pe_parser.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hex_engine.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hex_view.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
