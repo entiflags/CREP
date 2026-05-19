@@ -196,6 +196,87 @@ void HexView::copySelection()
     CloseClipboard();
 }
 
+void HexView::doGotoOffset()
+{
+    if (!m_engine || !m_engine->getBuffer())
+        return;
+
+    wchar_t buf[32] = L"";
+
+    RECT rc;
+    GetWindowRect(m_hWnd, &rc);
+
+    HWND hPopup = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        L"#32770", L"Go to Offset",
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        rc.left + 100, rc.top + 100, 250, 80,
+        m_hWnd, nullptr, nullptr, nullptr);
+
+    HWND hEdit = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
+        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        10, 10, 140, 22, hPopup, (HMENU)101, nullptr, nullptr);
+
+    CreateWindowExW(0, L"BUTTON", L"Go",
+        WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+        160, 10, 60, 22, hPopup, (HMENU)IDOK, nullptr, nullptr);
+
+    SetFocus(hEdit);
+    EnableWindow(m_hWnd, FALSE);
+
+    MSG msg;
+    bool done = false;
+    bool confirmed = false;
+
+    while (!done && GetMessage(&msg, nullptr, 0, 0)) {
+        if (msg.hwnd == hEdit && msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN) {
+            GetWindowTextW(hEdit, buf, 32);
+            done = true;
+            confirmed = true;
+        }
+        else if (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE) {
+            done = true;
+        }
+        else if (msg.hwnd == hPopup && msg.message == WM_CLOSE) {
+            done = true;
+        }
+        else {
+            if (IsDialogMessageW(hPopup, &msg))
+                continue;
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        if (!IsWindow(hPopup)) {
+            done = true;
+        }
+    }
+
+    if (!confirmed && IsWindow(hEdit))
+        GetWindowTextW(hEdit, buf, 32);
+
+    EnableWindow(m_hWnd, TRUE);
+    if (IsWindow(hPopup))
+        DestroyWindow(hPopup);
+    SetFocus(m_hWnd);
+
+    if (buf[0] == 0)
+        return;
+
+    size_t offset = (size_t)wcstoull(buf, nullptr, 16);
+    if (offset < m_engine->getBuffer()->size()) {
+        m_engine->setCursor(offset);
+        size_t bpr = m_engine->getBytesPerRow();
+        size_t rowStart = (offset / bpr) * bpr;
+        size_t rowEnd = rowStart + bpr;
+        if (rowEnd > m_engine->getBuffer()->size())
+            rowEnd = m_engine->getBuffer()->size();
+        m_engine->setSelection(rowStart, rowEnd);
+        ensureCursorVisible();
+        InvalidateRect(m_hWnd, nullptr, TRUE);
+    }
+
+}
+
 void HexView::onPaint(HDC hdc)
 {
     if (!m_engine || !m_engine->getBuffer())
@@ -408,6 +489,10 @@ void HexView::onKeyDown(WPARAM vk)
     case 'C':
         if (GetKeyState(VK_CONTROL) & 0x8000)
             copySelection();
+        break;
+    case 'G':
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+            doGotoOffset();
         break;
     case 'Y':
         if (GetKeyState(VK_CONTROL) & 0x8000)

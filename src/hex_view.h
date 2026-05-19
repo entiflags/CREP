@@ -34,6 +34,8 @@ private:
 
     void copySelection();
 
+    void doGotoOffset();
+
     // Metrics
     int  getRowHeight() const { return m_charHeight; }
     int  getOffsetColumnWidth() const;
